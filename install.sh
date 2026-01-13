@@ -107,7 +107,7 @@ OPTIONS:
   -u, --uninstall
   -r, --remove            Uninstall/Remove themes or link for libadwaita
 
-  --tweaks                Specify versions for tweaks [nord|black|darker|rimless|normal]
+  --tweaks                Specify versions for tweaks [nord|black|darker|rimless|normal|macos]
                           (WORRING: 'nord' and 'darker' can not mix use with 'black'!)
                           1. nord       Nord colorscheme version
                           2. black      Blackness colorscheme version
@@ -116,6 +116,7 @@ OPTIONS:
                           5. normal     Normal sidebar style (Nautilus)
                           6. float      Float gnome-shell panel style
                           7. colorful   Colorful gnome-shell panel style
+                          8. macos      macOS style window buttons
 
   --round                 Change theme round corner border-radius [Input the px value you want] (Suggested: 2px < value < 16px)
                           1. 3px
@@ -211,18 +212,35 @@ install() {
   cd "${THEME_DIR}/metacity-1" && ln -s metacity-theme-2.xml metacity-theme-1.xml
 
   mkdir -p                                                                                   "${THEME_DIR}/xfwm4"
-  cp -r "${SRC_DIR}/assets/xfwm4/svg/assets${ELSE_LIGHT:-}/"*.svg                            "${THEME_DIR}/xfwm4"
+  if [[ "$macstyle" == "true" ]] ; then
+    cp -r "${SRC_DIR}/assets/xfwm4/svg/assets${ELSE_LIGHT:-}-mac/"*.svg                      "${THEME_DIR}/xfwm4"
+  else
+    cp -r "${SRC_DIR}/assets/xfwm4/svg/assets${ELSE_LIGHT:-}/"*.svg                          "${THEME_DIR}/xfwm4"
+  fi
   cp -r "${SRC_DIR}/assets/xfwm4/xpm/assets/"*.xpm                                           "${THEME_DIR}/xfwm4"
   cp -r "${SRC_DIR}/main/xfwm4/themerc"                                                      "${THEME_DIR}/xfwm4/themerc"
   mkdir -p                                                                                   "${THEME_DIR}-hdpi/xfwm4"
-  cp -r "${SRC_DIR}/assets/xfwm4/svg/assets${ELSE_LIGHT:-}-hdpi/"*.svg                       "${THEME_DIR}-hdpi/xfwm4"
+  if [[ "$macstyle" == "true" ]] ; then
+    cp -r "${SRC_DIR}/assets/xfwm4/svg/assets${ELSE_LIGHT:-}-mac-hdpi/"*.svg                 "${THEME_DIR}-hdpi/xfwm4"
+  else
+    cp -r "${SRC_DIR}/assets/xfwm4/svg/assets${ELSE_LIGHT:-}-hdpi/"*.svg                     "${THEME_DIR}-hdpi/xfwm4"
+  fi
   cp -r "${SRC_DIR}/assets/xfwm4/xpm/assets-hdpi/"*.xpm                                      "${THEME_DIR}-hdpi/xfwm4"
   cp -r "${SRC_DIR}/main/xfwm4/themerc"                                                      "${THEME_DIR}-hdpi/xfwm4/themerc"
   mkdir -p                                                                                   "${THEME_DIR}-xhdpi/xfwm4"
-  cp -r "${SRC_DIR}/assets/xfwm4/svg/assets${ELSE_LIGHT:-}-xhdpi/"*.svg                      "${THEME_DIR}-xhdpi/xfwm4"
+  if [[ "$macstyle" == "true" ]] ; then
+    cp -r "${SRC_DIR}/assets/xfwm4/svg/assets${ELSE_LIGHT:-}-mac-xhdpi/"*.svg                "${THEME_DIR}-xhdpi/xfwm4"
+  else
+    cp -r "${SRC_DIR}/assets/xfwm4/svg/assets${ELSE_LIGHT:-}-xhdpi/"*.svg                    "${THEME_DIR}-xhdpi/xfwm4"
+  fi
   cp -r "${SRC_DIR}/assets/xfwm4/xpm/assets-xhdpi/"*.xpm                                     "${THEME_DIR}-xhdpi/xfwm4"
   cp -r "${SRC_DIR}/main/xfwm4/themerc"                                                      "${THEME_DIR}-xhdpi/xfwm4/themerc"
-  xfwm_button
+
+  if [[ "$macstyle" == "true" && "$ctype" != '' ]] ; then
+    xfwm_button_mac
+  else
+    xfwm_button
+  fi
 
   mkdir -p                                                                                   "${THEME_DIR}/plank"
   if [[ "$color" == '-Light' ]]; then
@@ -717,6 +735,11 @@ while [[ $# -gt 0 ]]; do
             echo -e "Install Colorful Gnome-Shell Panel version! ..."
             shift
             ;;
+          macos)
+            macstyle="true"
+            echo -e "Install macOS style window buttons version! ..."
+            shift
+            ;;
           -*)
             break
             ;;
@@ -885,6 +908,68 @@ theme_tweaks() {
   if [[ "$round" == "true" ]] ; then
     round_corner
   fi
+
+  if [[ "$macstyle" = "true" ]] ; then
+    install_mac
+  fi
+}
+
+install_mac() {
+  sed -i "/\$mac_style:/s/'false'/'true'/" ${SRC_DIR}/sass/_tweaks.scss
+}
+
+xfwm_button_mac() {
+  case "$ctype" in
+    '')
+      button_close="#fd5f51"
+      button_max="#38c76a"
+      button_min="#fdbe04"
+      ;;
+    -nord)
+      button_close="#bf616a"
+      button_max="#a3be8c"
+      button_min="#ebcb8b"
+      ;;
+  esac
+
+  sed -i "s/#fd5f51/${button_close}/g"                                          "${THEME_DIR}/xfwm4/close-active.svg"
+  sed -i "s/#fd5f51/${button_close}/g"                                          "${THEME_DIR}/xfwm4/close-prelight.svg"
+  sed -i "s/#fd5f51/${button_close}/g"                                          "${THEME_DIR}/xfwm4/close-pressed.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}/xfwm4/maximize-active.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}/xfwm4/maximize-prelight.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}/xfwm4/maximize-pressed.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}/xfwm4/maximize-toggled-active.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}/xfwm4/maximize-toggled-prelight.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}/xfwm4/maximize-toggled-pressed.svg"
+  sed -i "s/#fdbe04/${button_min}/g"                                            "${THEME_DIR}/xfwm4/hide-active.svg"
+  sed -i "s/#fdbe04/${button_min}/g"                                            "${THEME_DIR}/xfwm4/hide-prelight.svg"
+  sed -i "s/#fdbe04/${button_min}/g"                                            "${THEME_DIR}/xfwm4/hide-pressed.svg"
+
+  sed -i "s/#fd5f51/${button_close}/g"                                          "${THEME_DIR}-hdpi/xfwm4/close-active.svg"
+  sed -i "s/#fd5f51/${button_close}/g"                                          "${THEME_DIR}-hdpi/xfwm4/close-prelight.svg"
+  sed -i "s/#fd5f51/${button_close}/g"                                          "${THEME_DIR}-hdpi/xfwm4/close-pressed.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}-hdpi/xfwm4/maximize-active.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}-hdpi/xfwm4/maximize-prelight.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}-hdpi/xfwm4/maximize-pressed.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}-hdpi/xfwm4/maximize-toggled-active.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}-hdpi/xfwm4/maximize-toggled-prelight.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}-hdpi/xfwm4/maximize-toggled-pressed.svg"
+  sed -i "s/#fdbe04/${button_min}/g"                                            "${THEME_DIR}-hdpi/xfwm4/hide-active.svg"
+  sed -i "s/#fdbe04/${button_min}/g"                                            "${THEME_DIR}-hdpi/xfwm4/hide-prelight.svg"
+  sed -i "s/#fdbe04/${button_min}/g"                                            "${THEME_DIR}-hdpi/xfwm4/hide-pressed.svg"
+
+  sed -i "s/#fd5f51/${button_close}/g"                                          "${THEME_DIR}-xhdpi/xfwm4/close-active.svg"
+  sed -i "s/#fd5f51/${button_close}/g"                                          "${THEME_DIR}-xhdpi/xfwm4/close-prelight.svg"
+  sed -i "s/#fd5f51/${button_close}/g"                                          "${THEME_DIR}-xhdpi/xfwm4/close-pressed.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}-xhdpi/xfwm4/maximize-active.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}-xhdpi/xfwm4/maximize-prelight.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}-xhdpi/xfwm4/maximize-pressed.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}-xhdpi/xfwm4/maximize-toggled-active.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}-xhdpi/xfwm4/maximize-toggled-prelight.svg"
+  sed -i "s/#38c76a/${button_max}/g"                                            "${THEME_DIR}-xhdpi/xfwm4/maximize-toggled-pressed.svg"
+  sed -i "s/#fdbe04/${button_min}/g"                                            "${THEME_DIR}-xhdpi/xfwm4/hide-active.svg"
+  sed -i "s/#fdbe04/${button_min}/g"                                            "${THEME_DIR}-xhdpi/xfwm4/hide-prelight.svg"
+  sed -i "s/#fdbe04/${button_min}/g"                                            "${THEME_DIR}-xhdpi/xfwm4/hide-pressed.svg"
 }
 
 uninstall_link() {
