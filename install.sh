@@ -915,7 +915,7 @@ theme_tweaks() {
 }
 
 install_mac() {
-  sed -i "/\$mac_style:/s/'false'/'true'/" ${SRC_DIR}/sass/_tweaks-temp.scss
+  sed -i "/\$mac_style:/s/'false'/'true'/" ${SRC_DIR}/sass/_tweaks.scss
 }
 
 xfwm_button_mac() {
