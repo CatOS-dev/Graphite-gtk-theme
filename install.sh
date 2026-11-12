@@ -268,8 +268,8 @@ install() {
   fi
 }
 
-# Destination directory
-if [[ "$UID" -eq "$ROOT_UID" ]]; then
+# Destination directory (DESTDIR also applies to unprivileged package builds)
+if [[ -n "${DESTDIR:-}" || "$UID" -eq "$ROOT_UID" ]]; then
   APP_DIR="${DESTDIR}/usr/share/applications"
   BIN_DIR="${DESTDIR}/usr/bin"
 else
