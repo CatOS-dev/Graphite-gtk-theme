@@ -107,16 +107,18 @@ OPTIONS:
   -u, --uninstall
   -r, --remove            Uninstall/Remove themes or link for libadwaita
 
-  --tweaks                Specify versions for tweaks [nord|black|darker|rimless|normal|macos]
-                          (WORRING: 'nord' and 'darker' can not mix use with 'black'!)
+  --tweaks                Specify versions for tweaks [nord|dracula|ferra|black|darker|rimless|normal|macos]
+                          (WORRING: 'nord', 'dracula', 'ferra' and 'darker' can not mix use with 'black'!)
                           1. nord       Nord colorscheme version
-                          2. black      Blackness colorscheme version
-                          3. darker     Darker (default|nord) color version (black option can not be darker)
-                          4. rimless    Remove the 2px outline about windows and menus
-                          5. normal     Normal sidebar style (Nautilus)
-                          6. float      Float gnome-shell panel style
-                          7. colorful   Colorful gnome-shell panel style
-                          8. macos      macOS style window buttons
+                          2. dracula    Dracula colorscheme version
+                          3. ferra      Ferra colorscheme version (Kanagawa/Gruvbox inspired)
+                          4. black      Blackness colorscheme version
+                          5. darker     Darker (default|nord|dracula|ferra) color version (black option can not be darker)
+                          6. rimless    Remove the 2px outline about windows and menus
+                          7. normal     Normal sidebar style (Nautilus)
+                          8. float      Float gnome-shell panel style
+                          9. colorful   Colorful gnome-shell panel style
+                          10. macos     macOS style window buttons
 
   --round                 Change theme round corner border-radius [Input the px value you want] (Suggested: 2px < value < 16px)
                           1. 3px
@@ -184,14 +186,29 @@ install() {
   cp -r "${SRC_DIR}/assets/gtk-2.0/assets${theme}${ELSE_DARK:-}${ctype}/"*.png               "${THEME_DIR}/gtk-2.0/assets"
 
   mkdir -p                                                                                   "${THEME_DIR}/gtk-3.0"
-  cp -r "${SRC_DIR}/assets/gtk/assets${theme}"                                               "${THEME_DIR}/gtk-3.0/assets"
+  local gtk_assets="assets${theme}"
+  if [[ "$ctype" == '-dracula' ]]; then
+    if [[ -d "${SRC_DIR}/assets/gtk/assets${theme}-dracula" ]]; then
+      gtk_assets="assets${theme}-dracula"
+    elif [[ "${theme}" == '' && -d "${SRC_DIR}/assets/gtk/assets-dracula" ]]; then
+      gtk_assets="assets-dracula"
+    fi
+  fi
+  if [[ "$ctype" == '-ferra' ]]; then
+    if [[ -d "${SRC_DIR}/assets/gtk/assets${theme}-ferra" ]]; then
+      gtk_assets="assets${theme}-ferra"
+    elif [[ "${theme}" == '' && -d "${SRC_DIR}/assets/gtk/assets-ferra" ]]; then
+      gtk_assets="assets-ferra"
+    fi
+  fi
+  cp -r "${SRC_DIR}/assets/gtk/${gtk_assets}"                                                "${THEME_DIR}/gtk-3.0/assets"
   cp -r "${SRC_DIR}/assets/gtk/scalable"                                                     "${THEME_DIR}/gtk-3.0/assets"
   cp -r "${SRC_DIR}/assets/gtk/thumbnail${theme}${ELSE_DARK:-}.png"                          "${THEME_DIR}/gtk-3.0/thumbnail.png"
   sassc $SASSC_OPT "${SRC_DIR}/main/gtk-3.0/gtk${color}.scss"                                "${THEME_DIR}/gtk-3.0/gtk.css"
   sassc $SASSC_OPT "${SRC_DIR}/main/gtk-3.0/gtk-Dark.scss"                                   "${THEME_DIR}/gtk-3.0/gtk-dark.css"
 
   mkdir -p                                                                                   "${THEME_DIR}/gtk-4.0"
-  cp -r "${SRC_DIR}/assets/gtk/assets${theme}"                                               "${THEME_DIR}/gtk-4.0/assets"
+  cp -r "${SRC_DIR}/assets/gtk/${gtk_assets}"                                                "${THEME_DIR}/gtk-4.0/assets"
   cp -r "${SRC_DIR}/assets/gtk/scalable"                                                     "${THEME_DIR}/gtk-4.0/assets"
   cp -r "${SRC_DIR}/assets/gtk/thumbnail${theme}${ELSE_DARK:-}.png"                          "${THEME_DIR}/gtk-4.0/thumbnail.png"
   sassc $SASSC_OPT "${SRC_DIR}/main/gtk-4.0/gtk${color}.scss"                                "${THEME_DIR}/gtk-4.0/gtk.css"
@@ -249,6 +266,27 @@ install() {
   else
     cp -r "${SRC_DIR}/main/plank/theme-Dark/"*                                               "${THEME_DIR}/plank"
   fi
+}
+
+# Destination directory
+if [[ "$UID" -eq "$ROOT_UID" ]]; then
+  APP_DIR="${DESTDIR}/usr/share/applications"
+  BIN_DIR="${DESTDIR}/usr/bin"
+else
+  APP_DIR="$HOME/.local/share/applications"
+  BIN_DIR="$HOME/.local/bin"
+fi
+
+install_app() {
+  echo "Installing 'gnome-theme-switcher' app..."
+
+  [[ -f "${BIN_DIR}/gnome-theme-switcher" ]] && rm -rf "${BIN_DIR}/gnome-theme-switcher"
+  [[ -f "${APP_DIR}/org.gnome.GTK4ThemeSwitcher.desktop" ]] && rm -rf "${APP_DIR}/org.gnome.GTK4ThemeSwitcher.desktop"
+
+  mkdir -p "${BIN_DIR}"
+  cp -r "${REPO_DIR}/other/gnome-theme-switcher/gnome-theme-switcher" "${BIN_DIR}"
+  mkdir -p "${APP_DIR}"
+  cp -r "${REPO_DIR}/other/gnome-theme-switcher/org.gnome.GTK4ThemeSwitcher.desktop" "${APP_DIR}"
 }
 
 color_value() {
@@ -331,6 +369,88 @@ color_value() {
           ;;
       esac
   fi
+
+  if [[ "$ctype" == '-dracula' ]]; then
+      case "$theme" in
+        '')
+          theme_color_dark='#f8f8f2'
+          theme_color_light='#44475a'
+          ;;
+        -purple)
+          theme_color_dark='#bd93f9'
+          theme_color_light='#9d6cf9'
+          ;;
+        -pink)
+          theme_color_dark='#ff79c6'
+          theme_color_light='#e85aaa'
+          ;;
+        -red)
+          theme_color_dark='#ff5555'
+          theme_color_light='#e83333'
+          ;;
+        -orange)
+          theme_color_dark='#ffb86c'
+          theme_color_light='#e8943c'
+          ;;
+        -yellow)
+          theme_color_dark='#f1fa8c'
+          theme_color_light='#c5cf60'
+          ;;
+        -green)
+          theme_color_dark='#50fa7b'
+          theme_color_light='#2dd154'
+          ;;
+        -teal)
+          theme_color_dark='#8be9fd'
+          theme_color_light='#5fc8dd'
+          ;;
+        -blue)
+          theme_color_dark='#6272a4'
+          theme_color_light='#3f4d7a'
+          ;;
+      esac
+  fi
+
+  if [[ "$ctype" == '-ferra' ]]; then
+      case "$theme" in
+        '')
+          theme_color_dark='#fecdb2'
+          theme_color_light='#fecdb2'
+          ;;
+        -purple)
+          theme_color_dark='#c9b8c4'
+          theme_color_light='#b8a0b0'
+          ;;
+        -pink)
+          theme_color_dark='#f6b6c9'
+          theme_color_light='#ffb9cc'
+          ;;
+        -red)
+          theme_color_dark='#e06b75'
+          theme_color_light='#c05862'
+          ;;
+        -orange)
+          theme_color_dark='#ffa07a'
+          theme_color_light='#e88c6f'
+          ;;
+        -yellow)
+          theme_color_dark='#f5d76e'
+          theme_color_light='#fff27a'
+          ;;
+        -green)
+          theme_color_dark='#b1b695'
+          theme_color_light='#9f9f7c'
+          ;;
+        -teal)
+          theme_color_dark='#bfbfcf'
+          theme_color_light='#a8b0a0'
+          ;;
+        -blue)
+          theme_color_dark='#d1d1e0'
+          theme_color_light='#c4b8c8'
+          ;;
+      esac
+  fi
 }
 
 make_gtkrc() {
@@ -352,6 +472,26 @@ make_gtkrc() {
         background_light='#f9fafb'
         background_dark='#313744'
         background_alt='#3a4150'
+      fi
+    elif [[ "$ctype" == '-dracula' ]]; then
+      if [[ "$darker" == 'true' ]]; then
+        background_light='#f8f8f2'
+        background_dark='#21222c'
+        background_alt='#353746'
+      else
+        background_light='#f8f8f2'
+        background_dark='#282a36'
+        background_alt='#44475a'
+      fi
+    elif [[ "$ctype" == '-ferra' ]]; then
+      if [[ "$darker" == 'true' ]]; then
+        background_light='#faf6f2'
+        background_dark='#2b292d'
+        background_alt='#4d424b'
+      else
+        background_light='#faf6f2'
+        background_dark='#2b292d'
+        background_alt='#4d424b'
       fi
     else
       if [[ "$darker" == 'true' ]]; then
@@ -375,6 +515,11 @@ make_gtkrc() {
     sed -i "s/#333333/${theme_color_light}/g"                                   "${THEME_DIR}/gtk-2.0/gtkrc"
   else
     sed -i "s/#E0E0E0/${theme_color_dark}/g"                                    "${THEME_DIR}/gtk-2.0/gtkrc"
+  fi
+
+  # Ferra default accent (blush): gtkrc templates use #333333 for selection on light schemes
+  if [[ "$ctype" == '-ferra' ]]; then
+    sed -i "s/#333333/${theme_color_light}/g"                                   "${THEME_DIR}/gtk-2.0/gtkrc"
   fi
 }
 
@@ -582,6 +727,18 @@ while [[ $# -gt 0 ]]; do
     -r|--remove|-u|--uninstall)
       uninstall="true"
       shift
+      for type in "${@}"; do
+      case "${type}" in
+        theme)
+          remove_theme="true"
+            shift
+            ;;
+        app)
+          remove_app="true"
+            shift
+            ;;
+      esac
+      done
       ;;
     -c|--color)
       shift
@@ -706,6 +863,18 @@ while [[ $# -gt 0 ]]; do
             echo -e "Install Nord version! ..."
             shift
             ;;
+          dracula)
+            dracula="true"
+            ctype="-dracula"
+            echo -e "Install Dracula version! ..."
+            shift
+            ;;
+          ferra)
+            ferra="true"
+            ctype="-ferra"
+            echo -e "Install Ferra version! ..."
+            shift
+            ;;
           black)
             blackness="true"
             echo -e "Install Blackness version! ..."
@@ -795,6 +964,14 @@ compact_size() {
 
 nord_color() {
   sed -i "/\$color_type:/s/default/nord/" ${SRC_DIR}/sass/_tweaks-temp.scss
+}
+
+dracula_color() {
+  sed -i "/\$color_type:/s/default/dracula/" ${SRC_DIR}/sass/_tweaks-temp.scss
+}
+
+ferra_color() {
+  sed -i "/\$color_type:/s/default/ferra/" ${SRC_DIR}/sass/_tweaks-temp.scss
 }
 
 blackness_color() {
@@ -916,6 +1093,14 @@ theme_tweaks() {
 
   if [[ "$nord" = "true" ]] ; then
     nord_color
+  fi
+
+  if [[ "$dracula" = "true" ]] ; then
+    dracula_color
+  fi
+
+  if [[ "$ferra" = "true" ]] ; then
+    ferra_color
   fi
 
   if [[ "$blackness" = "true" ]] ; then
@@ -1071,7 +1256,7 @@ clean_theme() {
   for theme in "${THEME_VARIANTS[@]}"; do
     for color in '' '-light' '-dark'; do
       for size in "${SIZE_VARIANTS[@]}"; do
-        for type in '' '-nord'; do
+        for type in '' '-nord' '-dracula' '-ferra'; do
           clean "${dest:-$DEST_DIR}" "${name:-$THEME_NAME}" "$theme" "$color" "$size" "$type"
         done
       done
@@ -1081,7 +1266,7 @@ clean_theme() {
   for theme in "${THEME_VARIANTS[@]}"; do
     for color in "${COLOR_VARIANTS[@]}"; do
       for size in "${SIZE_VARIANTS[@]}"; do
-        for type in '' '-nord'; do
+        for type in '' '-nord' '-dracula' '-ferra'; do
           uninstall "${dest:-$HOME/.local/share/themes}" "${_name:-$THEME_NAME}" "$theme" "$color" "$size" "$type"
         done
       done
@@ -1093,7 +1278,7 @@ uninstall_theme() {
   for theme in "${THEME_VARIANTS[@]}"; do
     for color in "${COLOR_VARIANTS[@]}"; do
       for size in "${SIZE_VARIANTS[@]}"; do
-        for type in '' '-nord'; do
+        for type in '' '-nord' '-dracula' '-ferra'; do
           uninstall "${dest:-$DEST_DIR}" "${_name:-$THEME_NAME}" "$theme" "$color" "$size" "$type"
         done
       done
@@ -1134,6 +1319,12 @@ if [[ "$uninstall" == 'true' ]]; then
     fi
   else
     echo && uninstall_theme && uninstall_link
+
+    if [[ "$remove_app" == 'true' ]]; then
+      echo -e "\nUninstall 'gnome-theme-switcher' app..."
+      rm -rf "${BIN_DIR}/gnome-theme-switcher"
+      rm -rf "${APP_DIR}/org.gnome.GTK4ThemeSwitcher.desktop"
+    fi
   fi
 else
   if [[ "$gdm" == 'true' ]]; then
@@ -1143,7 +1334,7 @@ else
       echo -e "\nNeed root permission !"
     fi
   else
-    install_package && sass_temp && gnome_shell_version && install_theme
+    install_package && sass_temp && gnome_shell_version && install_theme && install_app
 
     if [[ "$libadwaita" == 'true' ]]; then
       uninstall_link && link_theme

@@ -4,8 +4,11 @@ RENDER_SVG="$(command -v rendersvg)" || true
 INKSCAPE="$(command -v inkscape)" || true
 OPTIPNG="$(command -v optipng)" || true
 
+./make-ferra-backgrounds.sh 2>/dev/null || true
+./make-dracula-backgrounds.sh 2>/dev/null || true
+
 for theme in '' '-purple' '-pink' '-red' '-orange' '-yellow' '-green' '-teal' '-blue'; do
-  for type in '' '-nord'; do
+  for type in '' '-nord' '-dracula' '-ferra'; do
     case "$theme" in
       '')
         theme_color_dark='#333333'
@@ -86,36 +89,127 @@ for theme in '' '-purple' '-pink' '-red' '-orange' '-yellow' '-green' '-teal' '-
       esac
     fi
 
+    if [[ "$type" == '-dracula' ]]; then
+      case "$theme" in
+        '')
+          theme_color_dark='#44475a'
+          theme_color_light='#f8f8f2'
+          ;;
+        -purple)
+          theme_color_dark='#9d6cf9'
+          theme_color_light='#bd93f9'
+          ;;
+        -pink)
+          theme_color_dark='#e85aaa'
+          theme_color_light='#ff79c6'
+          ;;
+        -red)
+          theme_color_dark='#e83333'
+          theme_color_light='#ff5555'
+          ;;
+        -orange)
+          theme_color_dark='#e8943c'
+          theme_color_light='#ffb86c'
+          ;;
+        -yellow)
+          theme_color_dark='#c5cf60'
+          theme_color_light='#f1fa8c'
+          ;;
+        -green)
+          theme_color_dark='#2dd154'
+          theme_color_light='#50fa7b'
+          ;;
+        -teal)
+          theme_color_dark='#5fc8dd'
+          theme_color_light='#8be9fd'
+          ;;
+        -blue)
+          theme_color_dark='#3f4d7a'
+          theme_color_light='#6272a4'
+          ;;
+      esac
+    fi
+
+    if [[ "$type" == '-ferra' ]]; then
+      case "$theme" in
+        '')
+          theme_color_dark='#fecdb2'
+          theme_color_light='#fecdb2'
+          ;;
+        -purple)
+          theme_color_dark='#b8a0b0'
+          theme_color_light='#c9b8c4'
+          ;;
+        -pink)
+          theme_color_dark='#f6b6c9'
+          theme_color_light='#ffb9cc'
+          ;;
+        -red)
+          theme_color_dark='#e06b75'
+          theme_color_light='#c05862'
+          ;;
+        -orange)
+          theme_color_dark='#ffa07a'
+          theme_color_light='#e88c6f'
+          ;;
+        -yellow)
+          theme_color_dark='#f5d76e'
+          theme_color_light='#fff27a'
+          ;;
+        -green)
+          theme_color_dark='#b1b695'
+          theme_color_light='#9f9f7c'
+          ;;
+        -teal)
+          theme_color_dark='#bfbfcf'
+          theme_color_light='#a8b0a0'
+          ;;
+        -blue)
+          theme_color_dark='#d1d1e0'
+          theme_color_light='#c4b8c8'
+          ;;
+      esac
+    fi
+
     if [[ "$type" != '' ]]; then
       rm -rf "theme${theme}${type}"
       cp -rf "theme" "theme${theme}${type}"
       sed -i "s/#333333/${theme_color_dark}/g" "theme${theme}${type}"/*.svg
       sed -i "s/#e0e0e0/${theme_color_light}/g" "theme${theme}${type}"/*.svg
-      sed -i "s/#2c2c2c/#313744/g" "theme${theme}"/*.svg
+      if [[ "$type" == '-nord' ]]; then
+        sed -i "s/#2c2c2c/#313744/g" "theme${theme}${type}"/*.svg
+      elif [[ "$type" == '-dracula' ]]; then
+        sed -i "s/#2c2c2c/#282a36/g" "theme${theme}${type}"/*.svg
+      elif [[ "$type" == '-ferra' ]]; then
+        sed -i "s/#2c2c2c/#4d424b/g" "theme${theme}${type}"/*.svg
+      fi
     elif [[ "$theme" != '' ]]; then
       rm -rf "theme${theme}"
       cp -rf "theme" "theme${theme}"
       sed -i "s/#333333/${theme_color_dark}/g" "theme${theme}"/*.svg
       sed -i "s/#e0e0e0/${theme_color_light}/g" "theme${theme}"/*.svg
-      
+
     fi
   done
 done
 
 for color in '-Light' '-Dark'; do
-  for type in '' '-nord'; do
-    echo "Rendering 'background pictures ...'"
+  for type in '' '-nord' '-dracula' '-ferra'; do
+    echo "Rendering 'background${color}${type}.png' ..."
 
     if [[ -n "${RENDER_SVG}" ]]; then
       "$RENDER_SVG" --export-id "background${color}${type}" \
                     --dpi 192 \
                     --zoom 2 \
                     background.svg "background${color}${type}.png"
-    else
+    elif [[ -n "${INKSCAPE}" ]]; then
       "$INKSCAPE" --export-id="background${color}${type}" \
                   --export-id-only \
                   --export-dpi=192 \
                   --export-filename="background${color}${type}.png" background.svg >/dev/null
+    else
+      echo "Skip background render (no inkscape/rendersvg)."
+      continue
     fi
     if [[ -n "${OPTIPNG}" ]]; then
       "$OPTIPNG" -o7 --quiet "background${color}${type}.png"

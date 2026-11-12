@@ -2,7 +2,17 @@
 
 for theme in '' '-purple' '-pink' '-red' '-orange' '-yellow' '-green' '-teal' '-blue'; do
 for color in '' '-Dark'; do
-for type in '' '-nord'; do
+for type in '' '-nord' '-dracula' '-ferra'; do
+  if [[ "$theme" == '' ]]; then
+    base_svg="assets.svg"
+  else
+    base_svg="assets${theme}.svg"
+  fi
+
+  if [[ ! -f "$base_svg" ]]; then
+    continue
+  fi
+
   if [[ "$color" == '' ]]; then
     case "$theme" in
       -purple)
@@ -28,6 +38,9 @@ for type in '' '-nord'; do
         ;;
       -blue)
         theme_color='#3684dd'
+        ;;
+      *)
+        theme_color='#333333'
         ;;
     esac
   else
@@ -55,6 +68,9 @@ for type in '' '-nord'; do
         ;;
       -blue)
         theme_color='#5294e2'
+        ;;
+      *)
+        theme_color='#E0E0E0'
         ;;
     esac
   fi
@@ -95,24 +111,97 @@ for type in '' '-nord'; do
     esac
   fi
 
-  if [[ "$type" == '-nord' ]]; then
-    cp -rf "assets${color}.svg" "assets${theme}${color}${type}.svg"
+  if [[ "$type" == '-dracula' ]]; then
+    case "$theme" in
+      -purple)
+        theme_color='#9d6cf9'
+        ;;
+      -pink)
+        theme_color='#e85aaa'
+        ;;
+      -red)
+        theme_color='#e83333'
+        ;;
+      -orange)
+        theme_color='#e8943c'
+        ;;
+      -yellow)
+        theme_color='#c5cf60'
+        ;;
+      -green)
+        theme_color='#2dd154'
+        ;;
+      -teal)
+        theme_color='#5fc8dd'
+        ;;
+      -blue)
+        theme_color='#3f4d7a'
+        ;;
+      *)
+        if [[ "$color" == '' ]]; then
+          theme_color='#44475a'
+        else
+          theme_color='#f8f8f2'
+        fi
+        ;;
+    esac
+  fi
 
-    if [[ "$color" == '' ]]; then
-      sed -i "s/#333333/${theme_color}/g" "assets${theme}${color}${type}.svg"
-    else
-      sed -i "s/#E0E0E0/${theme_color}/g" "assets${theme}${color}${type}.svg"
-    fi
+  if [[ "$type" == '-ferra' ]]; then
+    case "$theme" in
+      -purple)
+        theme_color='#c9b8c4'
+        ;;
+      -pink)
+        theme_color='#f6b6c9'
+        ;;
+      -red)
+        theme_color='#e06b75'
+        ;;
+      -orange)
+        theme_color='#ffa07a'
+        ;;
+      -yellow)
+        theme_color='#f5d76e'
+        ;;
+      -green)
+        theme_color='#b1b695'
+        ;;
+      -teal)
+        theme_color='#bfbfcf'
+        ;;
+      -blue)
+        theme_color='#d1d1e0'
+        ;;
+      *)
+        if [[ "$color" == '' ]]; then
+          theme_color='#fecdb2'
+        else
+          theme_color='#fecdb2'
+        fi
+        ;;
+    esac
+  fi
+
+  if [[ -z "$type" && -z "$color" ]]; then
+    continue
+  fi
+
+  out_svg="assets${theme}${color}${type}.svg"
+  if [[ "$out_svg" == "$base_svg" ]]; then
+    continue
+  fi
+
+  cp -rf "$base_svg" "$out_svg"
+
+  if [[ "$color" == '' ]]; then
+    sed -i "s/#333333/${theme_color}/g" "$out_svg"
   else
-    if [[ "$theme" != '' ]]; then
-      cp -rf "assets${color}.svg" "assets${theme}${color}.svg"
+    sed -i "s/#E0E0E0/${theme_color}/g; s/#e0e0e0/${theme_color}/g" "$out_svg"
+  fi
 
-      if [[ "$color" == '' ]]; then
-        sed -i "s/#333333/${theme_color}/g" "assets${theme}${color}.svg"
-      else
-        sed -i "s/#E0E0E0/${theme_color}/g" "assets${theme}${color}.svg"
-      fi
-    fi
+  if [[ "$type" == '-ferra' ]]; then
+    sed -i "s/#333333/${theme_color}/g" "$out_svg"
   fi
 
 done
